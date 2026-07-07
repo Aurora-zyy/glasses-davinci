@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>html,body{margin:0;background:transparent;overflow:hidden}</style>
+<script type="importmap">{"imports":{
+  "three":"https://unpkg.com/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head><body>
+<script type="module">
+/* ===========================================================================
+   AI smart-glasses hero — waveguide AR glasses after the Ray-Ban/Orion class:
+   graphite acetate frame, brass hinges + camera bezel (ties to the da Vinci
+   gold token), iridescent waveguide lenses, in-temple battery + PCB, a corner
+   camera module. rest pose = worn silhouette; spread pose = teardown/exploded.
+   Render one frame:  renderer.html?yaw=25&pose=rest
+   =========================================================================== */
+import * as THREE from 'three';
+import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
+import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+
+const q=new URLSearchParams(location.search);
+const YAW=parseFloat(q.get('yaw')??'25');
+const POSE=q.get('pose')??'rest';
+const SPREAD=POSE==='spread';
+const W=1000,H=1300;
+
+const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
+renderer.setSize(W,H); renderer.setPixelRatio(1);
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.5;
+document.body.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.environment=new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(),.04).texture;
+
+const cam=new THREE.PerspectiveCamera(30,W/H,10,2000);
+cam.position.set(0,34,440); cam.lookAt(0,-2,0);
+
+// warm three-point rig — key catches the brass, cool rim separates from the sepia world
+const key=new THREE.DirectionalLight(0xfff0dc,3.5); key.position.set(190,250,240); scene.add(key);
+const rim=new THREE.DirectionalLight(0xbcd0ee,2.6); rim.position.set(-250,140,-200); scene.add(rim);
+const fill=new THREE.DirectionalLight(0xffffff,1.05); fill.position.set(40,40,420); scene.add(fill);
+scene.add(new THREE.AmbientLight(0x5a564e,1.0));
+
+/* ---- materials — Even-Realities-grade matte gunmetal titanium, monochrome ---- */
+const M={
+  titan: new THREE.MeshStandardMaterial({color:0x3c3f45, metalness:.82, roughness:.44}),
+  edge:  new THREE.MeshStandardMaterial({color:0x2a2c31, metalness:.72, roughness:.52}),
+  steel: new THREE.MeshStandardMaterial({color:0xb4b9c1, metalness:.96, roughness:.26}),
+  dark:  new THREE.MeshStandardMaterial({color:0x0d0e11, metalness:.6,  roughness:.34}),
+  pcb:   new THREE.MeshStandardMaterial({color:0x2f5d47, metalness:.5,  roughness:.5}),
+  cell:  new THREE.MeshStandardMaterial({color:0x8a8f98, metalness:.9,  roughness:.4}),
+  // near-clear waveguide, only a whisper of diffraction iridescence
+  wave:  new THREE.MeshPhysicalMaterial({color:0xc3d4d8, metalness:0, roughness:.05,
+           transmission:.92, thickness:1.4, ior:1.5, iridescence:.5, iridescenceIOR:1.3,
+           iridescenceThicknessRange:[140,420], clearcoat:1, clearcoatRoughness:.06}),
+};
+const rb=(w,h,d,m=M.titan,r=2)=>new THREE.Mesh(new RoundedBoxGeometry(w,h,d,5,r),m);
+const cyl=(r,l,m=M.titan,axis='x',seg=28)=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(r,r,l,seg),m);
+  if(axis==='x')c.rotation.z=Math.PI/2; if(axis==='z')c.rotation.x=Math.PI/2; return c;};
+const torus=(R,t,m=M.titan,seg=56)=>new THREE.Mesh(new THREE.TorusGeometry(R,t,16,seg),m);
+
+/* ---------- one lens assembly (side = -1 left, +1 right) ---------- */
+// thin round rim, clear waveguide (Even Realities "Panel" profile)
+function lens(side){
+  const g=new THREE.Group(); g.position.x=side*39;
+  const rim=torus(21,1.5,M.titan); rim.scale.set(1.2,.98,.42); g.add(rim);
+  // faint inner coupling grating
+  const grat=torus(18.4,.4,M.steel); grat.scale.set(1.2,.98,.34); grat.position.z=.9; g.add(grat);
+  const glass=new THREE.Group(); glass.scale.set(1.2,.98,1);
+  const disc=new THREE.Mesh(new THREE.CylinderGeometry(20,20,1,44),M.wave);
+  disc.rotation.x=Math.PI/2; glass.add(disc);
+  if(SPREAD){glass.position.z=52; glass.rotation.x=-.15;}
+  g.add(glass);
+  return g;
+}
+
+/* ---------- one temple arm (side) — thin blade + signature flat module ---------- */
+function temple(side){
+  const g=new THREE.Group();
+  const hingeX=side*63, hingeY=6, hingeZ=3;
+  const knuck=cyl(2.4,5,M.titan,'x'); knuck.position.set(hingeX,hingeY,hingeZ); g.add(knuck);
+  const pin=cyl(1,6,M.steel,'x'); pin.position.set(hingeX,hingeY,hingeZ); g.add(pin);
+  const arm=new THREE.Group(); arm.position.set(hingeX,hingeY,hingeZ);
+  arm.rotation.y=SPREAD?side*0.40:side*0.06;
+  // thin front blade
+  const blade=rb(3.2,8,58,M.titan,1.4); blade.position.z=-28; arm.add(blade);
+  // ★ signature flat rectangular module (electronics/battery), proud of the outer face
+  const mod=rb(4.6,13,36,M.edge,4.5); mod.position.set(side*1.6,-.4,-46);
+  if(SPREAD){mod.position.x+=side*24; mod.position.y+=7; mod.position.z+=6;} arm.add(mod);
+  if(SPREAD){ // reveal what lives inside the module
+    const pcb=rb(.8,10,30,M.pcb,.4); pcb.position.set(side*1.6,-.4,-46); arm.add(pcb);
+    const cell=rb(2.4,9,26,M.cell,1); cell.position.set(side*1.6,-.4,-46); arm.add(cell);
+    const chip=rb(4,1.2,5,M.dark,.3); chip.position.set(side*1.6,4.6,-42); arm.add(chip);
+  }
+  // rear blade to the ear
+  const rear=rb(3,7,42,M.titan,1.3); rear.position.z=-82; arm.add(rear);
+  // flat ear tip, bends down
+  const tip=new THREE.Group(); tip.position.set(0,-1.5,-104); tip.rotation.x=-.62;
+  const tipbox=rb(4.4,9,30,M.titan,2.2); tipbox.position.z=-14; tip.add(tipbox); arm.add(tip);
+  g.add(arm);
+  return g;
+}
+
+/* ---------- discreet micro-sensor at the right brow corner (nearly flush) ---------- */
+function sensor(){
+  const g=new THREE.Group(); g.position.set(56,13,3);
+  if(SPREAD){g.position.z+=40; g.position.y+=12;}
+  const house=rb(8,6,4,M.edge,2); g.add(house);
+  const eye=cyl(1.5,1.6,M.dark,'z'); eye.position.z=2.6; g.add(eye);
+  const led=cyl(.7,1.4,M.steel,'z'); led.position.set(-4.5,-2.4,2.4); g.add(led);
+  return g;
+}
+
+/* ===========================================================================
+   BUILD */
+function buildProduct(){
+  const g=new THREE.Group();
+  // slim single-bar bridge that meets both rims (Even-style keyhole bridge)
+  const bridge=rb(28,2.8,3.4,M.titan,1.3); bridge.position.set(0,10,1);
+  bridge.rotation.z=0; if(SPREAD)bridge.position.y+=32; g.add(bridge);
+  // subtle keyhole dip at center
+  const dip=rb(9,3.4,3.2,M.titan,1.4); dip.position.set(0,7.6,1);
+  if(SPREAD)dip.position.y+=32; g.add(dip);
+  // tiny nose pads
+  [-6.5,6.5].forEach(x=>{const p=rb(1.8,8,3,M.edge,1); p.position.set(x,-1,6); p.rotation.z=x<0?.32:-.32; g.add(p);});
+  g.add(lens(-1),lens(1));
+  g.add(temple(-1),temple(1));
+  g.add(sensor());
+  g.position.y=2;
+  return g;
+}
+
+const product=buildProduct();
+product.rotation.y=YAW*Math.PI/180;
+scene.add(product);
+renderer.render(scene,cam);
+</script>
+</body></html>

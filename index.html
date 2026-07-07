@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CODEX·OCVLVS — AI glasses × Leonardo, a lens study</title>
+<!-- Two-voice type: swap the two families for your art movement (slot ③). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Cormorant:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  /* ---- slot ⑥ color tokens: swap these 4 for your art movement ---- */
+  :root{
+    --bg:#e7dcc4; --cream:#f2ead7; --ink:#1f1810;
+    --accent-warm:#9c4a2a; --accent-cool:#556a5c; --line:#8a6a42; --line-ink:#4a3620;
+    --font-grotesque:'Archivo',sans-serif; --font-serif:'Cormorant',serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--ink);color:var(--bg);font-family:var(--font-grotesque);overflow-x:hidden}
+  ::selection{background:var(--accent-warm);color:var(--cream)}
+
+  header{position:fixed;inset:0 0 auto 0;z-index:40;display:flex;justify-content:space-between;
+    align-items:baseline;padding:22px 28px;mix-blend-mode:difference;color:#efe6d8}
+  header .brand{font-weight:700;letter-spacing:.22em;font-size:13px}
+  header .note{font-family:var(--font-serif);font-style:italic;font-size:15px;opacity:.85}
+
+  .rail{position:fixed;left:16px;top:50%;transform:translateY(-50%);z-index:40;display:flex;
+    flex-direction:column;gap:14px;font-family:var(--font-serif);font-size:14px;letter-spacing:.1em;
+    mix-blend-mode:difference;color:#efe6d8}
+  .rail span{opacity:.35;transition:opacity .4s}.rail span.on{opacity:1}
+
+  /* slot ④ blueprint overlay — swap the SVG paths for your world's line motif */
+  .gridlines{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:.3}
+  .gridlines *{stroke:var(--line);stroke-width:.6;fill:none;opacity:.5;stroke-opacity:.55}
+
+  .vignette{position:fixed;inset:0;z-index:54;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 46%,transparent 52%,rgba(12,9,5,.38) 100%)}
+  .grain{position:fixed;inset:-50%;z-index:56;pointer-events:none;opacity:.09;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain .9s steps(4) infinite}
+  @keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-2%,1.6%)}
+    50%{transform:translate(1.4%,-1.2%)}75%{transform:translate(-1.2%,-2%)}100%{transform:translate(0,0)}}
+  @media (prefers-reduced-motion:reduce){.grain{animation:none}}
+
+  /* ---- slot ① world: a receding gallery corridor you fly through ---- */
+  #hall{position:fixed;inset:0;z-index:2;overflow:hidden;perspective:1000px;perspective-origin:50% 45%;
+    background:radial-gradient(ellipse at 50% 38%,#2c2214 0%,#181109 58%,#0b0805 100%)}
+  #cam{position:absolute;left:0;top:0;width:100%;height:100%;transform-style:preserve-3d;will-change:transform}
+  .plane{position:absolute;left:50%;top:50%;transform-style:preserve-3d;backface-visibility:hidden}
+  /* floor + ceiling perspective grid (Renaissance one-point perspective) */
+  .floor,.ceil{width:3000px;height:6000px;margin:-3000px 0 0 -1500px;
+    background:
+     repeating-linear-gradient(0deg,transparent 0 146px,rgba(182,144,86,.36) 146px 150px),
+     repeating-linear-gradient(90deg,transparent 0 146px,rgba(182,144,86,.20) 146px 150px);
+    -webkit-mask-image:radial-gradient(ellipse at 50% 0,#000 10%,transparent 70%);
+    mask-image:radial-gradient(ellipse at 50% 0,#000 10%,transparent 70%)}
+  .floor{transform:rotateX(85deg) translateZ(-360px)}
+  .ceil{transform:rotateX(-85deg) translateZ(-360px);opacity:.5}
+  /* artworks hung on the corridor walls */
+  .art{width:460px;height:600px;margin:-300px 0 0 -230px;
+    background-size:cover;background-position:center;
+    border:2px solid rgba(184,150,96,.55);
+    box-shadow:0 50px 130px rgba(0,0,0,.66),inset 0 0 70px rgba(0,0,0,.4);
+    filter:saturate(.9) brightness(.86) sepia(.1)}
+  .art::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 7px rgba(22,15,8,.55);
+    background:linear-gradient(115deg,rgba(255,240,214,.10),transparent 40%)}
+  /* loggia arches you pass through — thick sepia pilasters + arch */
+  .arch{width:660px;height:880px;margin:-500px 0 0 -330px;
+    border:10px solid rgba(150,116,68,.5);border-bottom:none;border-radius:330px 330px 0 0;
+    box-shadow:0 0 90px rgba(0,0,0,.5),inset 0 0 70px rgba(0,0,0,.4),0 0 30px rgba(196,156,96,.12)}
+  .arch::before{content:"";position:absolute;left:-10px;right:-10px;bottom:-3px;height:3px;
+    background:rgba(150,116,68,.5)}
+  .arch::after{content:"";position:absolute;left:16px;right:16px;top:16px;bottom:0;
+    border:1px solid rgba(182,144,86,.28);border-bottom:none;border-radius:300px 300px 0 0}
+
+  /* hero object stage — canvas plays the turntable image sequence */
+  #heroStage{position:fixed;left:50vw;top:50vh;z-index:20;width:min(44vh,420px);pointer-events:none;
+    will-change:transform,opacity;filter:drop-shadow(0 30px 60px rgba(0,0,0,.45))}
+  #heroCanvas{width:100%;display:block;filter:saturate(.92) contrast(1.05) brightness(1.02) sepia(.05)}
+  #heroOverlay{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  #heroOverlay .anno{font-family:var(--font-serif);font-style:italic;font-size:15px;fill:var(--line-ink);
+    opacity:0;transition:opacity .5s}
+  #heroOverlay .leader{stroke:var(--line-ink);stroke-width:.9;fill:none;opacity:0;transition:opacity .5s}
+  #heroStage.explain .anno,#heroStage.explain .leader{opacity:.95}
+
+  section{position:relative;z-index:10}
+  .sticky{position:sticky;top:0;height:100vh;overflow:hidden;display:flex;align-items:center}
+  .bg{position:absolute;inset:-6%;background-size:cover;background-position:center;will-change:transform}
+  .shade{position:absolute;inset:0}
+  .copy{position:relative;z-index:5;padding:0 8vw;max-width:820px}
+  .copy .reveal{opacity:0;transform:translateY(28px);transition:opacity .8s ease,transform .8s ease}
+  .copy.in .reveal{opacity:1;transform:none}
+  .copy .reveal:nth-child(2){transition-delay:.12s}.copy .reveal:nth-child(3){transition-delay:.24s}
+  h2{font-weight:900;font-size:clamp(34px,4.6vw,62px);letter-spacing:-.02em;line-height:1.02}
+  .serif{font-family:var(--font-serif);font-weight:300;font-size:clamp(20px,2vw,27px);line-height:1.35;
+    letter-spacing:.01em;margin-top:14px;max-width:34em}
+  .btn{display:inline-block;margin-top:22px;padding:9px 18px;border-radius:8px;background:var(--cream);
+    color:var(--ink);font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 2px 0 rgba(0,0,0,.35)}
+  .btn:after{content:" ↗";font-weight:500}
+
+  #s1{height:220vh}
+  #s1 .shade{background:linear-gradient(90deg,rgba(11,8,4,.72),rgba(11,8,4,.14) 56%,transparent),linear-gradient(0deg,rgba(11,8,4,.6),transparent 42%)}
+  .giant{font-weight:900;font-size:clamp(88px,17vw,300px);letter-spacing:-.03em;line-height:.86;
+    color:var(--bg);text-shadow:0 8px 60px rgba(0,0,0,.35)}
+  #s1 .serif{font-size:clamp(24px,2.6vw,36px)}
+  #s1 .serif::first-letter{font-style:italic;font-size:1.9em;line-height:.6;font-weight:400;margin-right:2px;color:var(--cream)}
+  .hint{margin-top:5vh;font-size:12px;letter-spacing:.28em;opacity:.7}
+  #s2{height:240vh}
+  #s2 .shade{background:linear-gradient(90deg,rgba(11,8,4,.74),rgba(11,8,4,.12) 58%,transparent)}
+  #s3{height:260vh;background:transparent}
+  #s3 .sticky{background:radial-gradient(ellipse at 72% 74%,rgba(11,8,4,.82),rgba(11,8,4,.2) 46%,transparent 70%)}
+  #s3 .copy{margin-left:auto;text-align:right;padding-right:9vw;align-self:flex-end;padding-bottom:12vh}
+  #s3 .serif{margin-left:auto;font-style:italic;opacity:.85}
+  #s4{height:280vh;background:var(--bg);color:var(--ink)}
+  #s4 .bg{background-size:contain;background-repeat:no-repeat;background-position:right center;opacity:.3;
+    inset:0 0 0 auto;width:52%}
+  #s4 .copy{margin-left:auto;max-width:640px;padding-right:7vw}
+  #s4 h2{color:var(--ink)} #s4 .serif{color:var(--line-ink)}
+  .specs{margin-top:30px;list-style:none}
+  .specs li{display:flex;gap:16px;align-items:baseline;padding:13px 0;border-top:1px solid rgba(74,56,38,.28);
+    font-size:15px;font-weight:500;line-height:1.4;max-width:30em}
+  .specs li:last-child{border-bottom:1px solid rgba(74,56,38,.28)}
+  .specs b{font-family:var(--font-serif);font-style:italic;font-weight:500;font-size:18px;
+    color:var(--accent-warm);min-width:74px;flex:none}
+  #s5{background:var(--cream);color:var(--ink);padding:14vh 8vw 6vh}
+  #s5 h2{font-size:clamp(40px,6vw,84px)} #s5 .serif{color:var(--line-ink)}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:7vh}
+  .card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+  .card h3{margin-top:16px;font-size:20px;font-weight:700}
+  .card p{font-family:var(--font-serif);font-size:18px;line-height:1.4;margin-top:6px;color:var(--line-ink)}
+  footer{margin-top:12vh;padding-top:24px;border-top:1px solid rgba(74,56,38,.3);font-size:12px;
+    line-height:1.7;color:var(--line);max-width:60em}
+  @media(max-width:760px){.cards{grid-template-columns:1fr}#heroStage{width:38vh}.rail{display:none}}
+</style>
+</head>
+<body>
+<div class="vignette"></div><div class="grain"></div>
+<header><div class="brand" id="brand"></div><div class="note" id="note"></div></header>
+<nav class="rail"><span>I</span><span>II</span><span>III</span><span>IV</span><span>V</span></nav>
+<!-- slot ④: replace these paths with your world's line motif -->
+<!-- slot ④: Vitruvian circle-and-square — da Vinci's own proportion diagram -->
+<svg class="gridlines" width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 100 100">
+  <rect x="20" y="14" width="60" height="72"/>
+  <circle cx="50" cy="52" r="34"/>
+  <line x1="50" y1="0" x2="50" y2="100"/><line x1="0" y1="52" x2="100" y2="52"/>
+  <line x1="20" y1="14" x2="80" y2="86"/><line x1="80" y1="14" x2="20" y2="86"/>
+  <circle cx="50" cy="52" r="6"/>
+</svg>
+
+<!-- slot ①: the fly-through gallery corridor -->
+<div id="hall"><div id="cam">
+  <div class="plane floor"></div>
+  <div class="plane ceil"></div>
+  <div class="plane arch" style="transform:translate3d(0,10px,-260px)"></div>
+  <div class="plane art"  id="artA" style="transform:translate3d(-470px,-10px,-580px) rotateY(33deg)"></div>
+  <div class="plane arch" style="transform:translate3d(0,10px,-1160px)"></div>
+  <div class="plane art"  id="artB" style="transform:translate3d(475px,-10px,-1680px) rotateY(-33deg)"></div>
+  <div class="plane arch" style="transform:translate3d(0,10px,-2280px)"></div>
+  <div class="plane art"  id="artC" style="transform:translate3d(-470px,-10px,-2800px) rotateY(33deg)"></div>
+  <div class="plane arch" style="transform:translate3d(0,10px,-3380px)"></div>
+</div></div>
+
+<div id="heroStage">
+  <canvas id="heroCanvas" width="554" height="720"></canvas>
+  <svg id="heroOverlay" viewBox="0 0 554 720"></svg>
+</div>
+
+<section id="s1" data-i="0"><div class="sticky"><div class="bg"></div><div class="shade"></div>
+  <div class="copy"><div class="giant reveal" id="heroWord"></div><p class="serif reveal" id="s1sub"></p>
+  <p class="hint reveal">SCROLL&nbsp;&nbsp;—&nbsp;&nbsp;I / V</p></div></div></section>
+<section id="s2" data-i="1"><div class="sticky"><div class="bg"></div><div class="shade"></div>
+  <div class="copy"><h2 class="reveal" id="s2title"></h2><p class="serif reveal" id="s2sub"></p>
+  <a class="btn reveal" href="#s4" id="s2cta"></a></div></div></section>
+<section id="s3" data-i="2"><div class="sticky"><div class="bg"></div>
+  <div class="copy"><h2 class="reveal" id="s3title"></h2><p class="serif reveal" id="s3sub"></p></div></div></section>
+<section id="s4" data-i="3"><div class="sticky"><div class="bg"></div>
+  <div class="copy"><h2 class="reveal" id="s4title"></h2><p class="serif reveal" id="s4sub"></p>
+  <ul class="specs reveal" id="specs"></ul></div></div></section>
+<section id="s5" data-i="4"><div class="copy in" style="padding:0;max-width:none">
+  <h2 id="s5title"></h2><p class="serif" id="s5sub"></p><div class="cards" id="cards"></div>
+  <a class="btn" href="#s1" id="s5cta" style="margin-top:6vh"></a><footer id="footer"></footer></div></section>
+
+<script>
+/* ============================ CONFIG — fill this ============================ */
+const CONFIG = {
+  brand: "CODEX·OCVLVS — A LENS STVDY",         // ← Roman-inscription styling (V for U) reads classical
+  note: "an unofficial concept study",
+  heroWord: "SEE",
+  seqDir: "assets/seq",                          // turntable frames r00..r35 + spread s0..s6
+  // slot ②: public-domain Leonardo, one per chapter background (Wikimedia)
+  art: { s1:"assets/vitruvian.jpg", s2:"assets/flight.jpg",
+         s3:"assets/sfumato.jpg", s4:"assets/anatomy.jpg" },
+  chapters: {
+    s1sub: "Sight, five centuries on. Leonardo mapped the eye by candlelight; the lens has learned to think.",
+    s2title:"Not a screen.<br>A way of seeing.",
+    s2sub:"Leonardo ground glass to correct the eye. This one augments it — a waveguide thin as parchment, painting light onto the world itself.",
+    s2cta:"Read the study",
+    s3title:"The world,<br>annotated.", s3sub:"Sfumato, rendered in silicon.",   // the quiet frame
+    s4title:"An optic<br>worth studying.", s4sub:"Every element accounted for, in the master's hand.",
+    specs:[["30° FOV","Full-color waveguide, edge to edge — light painted directly onto the eye's field"],
+           ["‹40 g","The whole studio balanced on the bridge of the nose"],
+           ["on-device","A neural engine that reads the scene where it stands — nothing leaves the frame"],
+           ["12 MP","A single eye at the temple, framing what you frame"],
+           ["all-day","Cells hidden in each arm — the weight moved off the face, the old anatomist's trick"]],
+    s5title:"In the workshop.", s5sub:"Where it goes to see.",
+    cards:[["assets/selfportrait.jpg","The maker's eye","Trained on how a master looked — line, light, and proportion."],
+           ["assets/monalisa.jpg","Sfumato mode","Softening the seam between what is seen and what is rendered."]],
+    s5cta:"Request the whitepaper",
+    footer:"An unofficial concept study — not affiliated with any manufacturer. Artworks by Leonardo da Vinci, public domain, via Wikimedia Commons: Vitruvian Man; Design for a Flying Machine; Virgin of the Rocks; Views of a Foetus in the Womb; presumed self-portrait; Mona Lisa."
+  },
+  // hero keyframes on the global timeline: t = chapterIndex + progress.
+  // x/y in vw/vh, s scale, r css-rotation deg, o opacity, f turntable yaw deg (10°/frame). front view = f≈0/360.
+  hero:[
+    {t:0.00,x:74,y:116,s:0.64,r:-22,o:0,  f:44},
+    {t:0.45,x:60,y:58, s:0.94,r:-7, o:1,  f:22},
+    {t:1.00,x:55,y:53, s:1.05,r:-3, o:1,  f:4},
+    {t:1.50,x:64,y:52, s:1.14,r:6,  o:1,  f:74},    // rotate to reveal the temple + camera
+    {t:2.05,x:80,y:62, s:0.82,r:-12,o:1,  f:128},
+    {t:2.55,x:56,y:42, s:0.9, r:-5, o:1,  f:332},   // quiet-frame: near-front, poised, alone
+    {t:3.05,x:40,y:56, s:0.84,r:-3, o:1, f:352},
+    {t:3.45,x:30,y:52, s:1.16,r:0,  o:1,  f:360},   // teardown: front, exploded, annotations on
+    {t:4.05,x:30,y:18, s:0.94,r:0,  o:0,  f:360},
+  ],
+  // teardown annotations: [leaderPath, x, y, anchor, text] — refined against the ?f=4 still
+  anno:[
+    ["M250 372 L120 330 L28 330", 24,324,"start","30° full-color waveguide"],
+    ["M372 250 L470 214 L546 214",546,208,"end","12 MP world camera"],
+    ["M285 250 L360 150 L520 150",520,144,"end","9-axis IMU · bridge sensor"],
+    ["M420 404 L500 474 L546 474",546,468,"end","solid-state cell · in-temple"],
+  ],
+};
+/* =========================================================================== */
+
+const $=id=>document.getElementById(id), C=CONFIG, ch=C.chapters;
+$("brand").textContent=C.brand; $("note").textContent=C.note; $("heroWord").textContent=C.heroWord;
+$("s1sub").textContent=ch.s1sub; $("s2title").innerHTML=ch.s2title; $("s2sub").textContent=ch.s2sub;
+$("s2cta").textContent=ch.s2cta; $("s3title").innerHTML=ch.s3title; $("s3sub").textContent=ch.s3sub;
+$("s4title").innerHTML=ch.s4title; $("s4sub").textContent=ch.s4sub; $("s5title").textContent=ch.s5title;
+$("s5sub").textContent=ch.s5sub; $("s5cta").textContent=ch.s5cta; $("footer").innerHTML=ch.footer;
+$("specs").innerHTML=ch.specs.map(([b,t])=>`<li><b>${b}</b> ${t}</li>`).join("");
+$("cards").innerHTML=ch.cards.map(([i,h,p])=>`<div class="card"><img src="${i}" alt=""><h3>${h}</h3><p>${p}</p></div>`).join("");
+// immersive chapters I–III now live as paintings on the corridor walls
+$("artA").style.backgroundImage=`url(${C.art.s1})`;
+$("artB").style.backgroundImage=`url(${C.art.s2})`;
+$("artC").style.backgroundImage=`url(${C.art.s3})`;
+// the teardown (IV) stays grounded on parchment
+document.querySelectorAll("#s4 .bg")[0].style.backgroundImage=`url(${C.art.s4})`;
+$("heroOverlay").innerHTML=C.anno.map(([d,x,y,a,t])=>
+  `<path class="leader" d="${d}"/><text class="anno" x="${x}" y="${y}" text-anchor="${a}">${t}</text>`).join("");
+
+(() => {
+  const stage=$("heroStage"), sections=[...document.querySelectorAll("section")];
+  const cv=$("heroCanvas"), ctx=cv.getContext("2d");
+  const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  // ---- corridor fly-through refs + pointer parallax ----
+  const cam=$("cam"), hall=$("hall"), floor=document.querySelector(".floor"),
+        ceil=document.querySelector(".ceil"), s4el=$("s4");
+  let tmpx=0,tmpy=0,mpx=0,mpy=0;
+  if(!reduced)addEventListener("pointermove",e=>{tmpx=e.clientX/innerWidth-0.5;tmpy=e.clientY/innerHeight-0.5;},{passive:true});
+  function flyHall(){
+    const hallEnd=Math.max(s4el.offsetTop-innerHeight*0.9,1);
+    const hp=Math.min(Math.max(scrollY/hallEnd,0),1), camZ=hp*3500;
+    mpx+=(tmpx-mpx)*0.05; mpy+=(tmpy-mpy)*0.05;
+    cam.style.transform=`translateZ(${camZ}px) rotateY(${mpx*3.4}deg) rotateX(${-mpy*2.2}deg)`;
+    floor.style.backgroundPosition=`${mpx*40}px ${camZ*0.9}px`;
+    ceil.style.backgroundPosition=`${mpx*40}px ${-camZ*0.9}px`;
+    hall.style.opacity=1-Math.max((hp-0.9)/0.1,0);   // dissolve into the parchment workshop
+  }
+  const REST=[...Array(36)].map((_,i)=>{const m=new Image();m.src=`${C.seqDir}/r${String(i).padStart(2,"0")}.png`;return m});
+  const SPREAD=[...Array(7)].map((_,i)=>{const m=new Image();m.src=`${C.seqDir}/s${i}.png`;return m});
+  const ok=m=>m.complete&&m.naturalWidth;
+  function drawHero(yaw,spreadMix){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    const r=((Math.round(yaw/10)%36)+36)%36;
+    if(spreadMix<1&&ok(REST[r])){ctx.globalAlpha=1;ctx.drawImage(REST[r],0,0,cv.width,cv.height);}
+    if(spreadMix>0){const s=Math.max(0,Math.min(6,Math.round((((yaw+180)%360)-180+18)/6)));
+      if(ok(SPREAD[s])){ctx.globalAlpha=spreadMix;ctx.drawImage(SPREAD[s],0,0,cv.width,cv.height);ctx.globalAlpha=1;}}
+  }
+  const K=C.hero, lerp=(a,b,u)=>a+(b-a)*u, ease=u=>u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;
+  function sample(t){
+    if(t<=K[0].t)return K[0]; if(t>=K[K.length-1].t)return K[K.length-1];
+    let i=0; while(K[i+1].t<t)i++; const a=K[i],b=K[i+1],u=ease((t-a.t)/(b.t-a.t));
+    return {x:lerp(a.x,b.x,u),y:lerp(a.y,b.y,u),s:lerp(a.s,b.s,u),r:lerp(a.r,b.r,u),o:lerp(a.o,b.o,u),f:lerp(a.f,b.f,u)};
+  }
+  let target=0,smooth=0,vel=0,explodeE=0;
+  function measure(now){
+    const vh=innerHeight; let cur=0;
+    for(const sec of sections){
+      const rect=sec.getBoundingClientRect(), span=Math.max(rect.height-vh,1);
+      const p=Math.min(Math.max(-rect.top/span,0),1), i=+sec.dataset.i;
+      if(rect.top<vh*.5&&rect.bottom>vh*.5)cur=i;
+      const copy=sec.querySelector(".copy");
+      if(copy&&i<4){copy.classList.toggle("in",p>0.06&&p<0.98);
+        if(!reduced)copy.style.transform=`translateY(${(0.5-p)*4.5}vh)`;}
+      const bg=sec.querySelector(".bg");
+      if(bg&&!reduced&&i<3){const breathe=0.018*Math.sin(now/9000+i*2.1);   // ken-burns: nothing is static
+        bg.style.transform=`scale(${1.12-p*.09+breathe}) translate(${1.2*Math.sin(now/13000+i)}%,${p*-3}%)`;}
+      if(i===3)explodeE=Math.min(Math.max((p-.18)/.4,0),1),stage.classList.toggle("explain",explodeE>0.55);
+      if(i===cur)target=i+p;
+    }
+    document.querySelectorAll(".rail span").forEach((r,i)=>r.classList.toggle("on",i===cur));
+  }
+  function frame(now){
+    measure(now); flyHall();
+    const d=target-smooth, k=reduced?1:Math.min(0.16,0.055+Math.abs(d)*0.10);  // Mode-B: tune from motion_probe
+    smooth+=d*k; vel+=(d*k-vel)*0.12;
+    const h=sample(smooth), lean=Math.max(-6,Math.min(6,vel*260));
+    const idleR=reduced?0:Math.sin(now/1700)*1.1, idleY=reduced?0:Math.sin(now/2300)*0.55;
+    const spin=Math.max(-16,Math.min(16,vel*420))+(reduced?0:Math.sin(now/2600)*2.4);
+    drawHero(h.f+spin, Math.min(Math.max((explodeE-0.3)/0.3,0),1));
+    stage.style.left=h.x+"vw"; stage.style.top=(h.y+idleY)+"vh"; stage.style.opacity=h.o;
+    stage.style.transform=`translate(-50%,-50%) rotate(${h.r+lean+idleR}deg) scale(${h.s})`;
+    requestAnimationFrame(frame);
+  }
+
+  // ?f=1..5 still-frame mode (verification + asset export); ?p=<0..1> scrub mode (video export)
+  const params=new URLSearchParams(location.search), f=parseInt(params.get("f")), pv=params.get("p");
+  if(f>=1&&f<=5){
+    document.body.style.overflow="hidden";
+    sections.forEach((sec,i)=>{if(i===f-1){const st=sec.querySelector(".sticky");
+      if(st){st.style.position="fixed";st.style.inset="0";} sec.querySelector(".copy").classList.add("in");}
+      else sec.style.display="none";});
+    document.querySelectorAll(".rail span").forEach((r,i)=>r.classList.toggle("on",i===f-1));
+    if(f===4)stage.classList.add("explain");
+    // park the corridor camera so this chapter's wall painting sits in view
+    const camZ=[230,1330,2450,0,0][f-1];
+    cam.style.transform=`translateZ(${camZ}px)`;
+    if(f>=4)hall.style.opacity=0;
+    const T=[0.45,1.5,2.55,3.45,4.2][f-1], h=sample(T);
+    const still=()=>drawHero(h.f, f===4?1:0); [...REST,...SPREAD].forEach(m=>m.addEventListener("load",still)); still();
+    stage.style.left=h.x+"vw"; stage.style.top=h.y+"vh"; stage.style.opacity=h.o;
+    stage.style.transform=`translate(-50%,-50%) rotate(${h.r}deg) scale(${h.s})`;
+    return;
+  }
+  requestAnimationFrame(frame);
+  if(pv!==null){const y=(document.documentElement.scrollHeight-innerHeight)*parseFloat(pv);
+    scrollTo(0,y); measure(performance.now()); smooth=target;}
+})();
+</script>
+</body>
+</html>
